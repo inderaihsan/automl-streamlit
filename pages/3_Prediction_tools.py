@@ -13,7 +13,7 @@ st.header("Under development :p")
 # File uploader for ML model
 mlmodel = st.file_uploader("Upload your ML model", type=['sav'])
 
-# Load the model when uploaded
+# Load the model when uploaded 
 if mlmodel:
     mlmodel = read_model(mlmodel)
     st.success("Model successfully loaded!")
