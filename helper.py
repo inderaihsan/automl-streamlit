@@ -1,10 +1,12 @@
-from sklearn.metrics import make_scorer, mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import train_test_split, cross_val_score,KFold
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split, KFold
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np 
 import streamlit as st
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 
 
@@ -37,29 +39,20 @@ def evaluate(actual, predicted, squared = False, model = None):
     # Calculate MAE (Mean Absolute Error)
     mae = np.mean(np.abs(actual - predicted))
     mae = mean_absolute_error(actual, predicted)
-
     # Calculate MSE (Mean Squared Error)
     mse = mean_squared_error(actual ,predicted)
-
     # Calculate R-squared (R2)
     r2 = r2_score(actual, predicted)
-
     # Calculate MAPE (Median Absolute Percentage Error)
     mape = np.median(ape)
-
-
     # Calculate FSD (Forecast Standard Deviation)
     fsd = np.std(ape)
-
-
     #pe10 and rt20 :
-
     r20 = [x for x in ape if x>=0.2]
     r10 = [x for x in ape if x<=0.1]
     rt20 = len(r20)/n
     pe10 = len(r10)/n
     # Create a dictionary to store the metrics
-
     metrics = {
         'MAE': mae,
         'MSE': mse,
@@ -68,12 +61,12 @@ def evaluate(actual, predicted, squared = False, model = None):
         'FSD': fsd,
         'PE10' : pe10,
         'RT20' : rt20
-
     }
     return metrics
 
-
-def GovalMachineLearning(data, X, y, algorithm) :
+@st.cache_resource
+def GovalMachineLearning(data, X, y, _algorithm) :
+  algorithm = _algorithm
   columns = X
   columns.append(y)
 #   if data[columns].isna().values.any():
@@ -101,6 +94,8 @@ def GovalMachineLearning(data, X, y, algorithm) :
     prediction_test = mod.predict(X_test)
     test_score = evaluate(y_test, prediction_test, squared = True) 
     train_score = evaluate(y, prediction_train, squared = True) 
+    st.session_state['test_score'] = test_score
+    st.session_state['train_score'] = train_score
     col1, col2 = st.columns(2)
 
 # Display tables in the respective columns
@@ -137,6 +132,7 @@ def GovalMachineLearning(data, X, y, algorithm) :
     #   st.write("training in KFOLD.... fold", i+1)
       i = i+1
       loading_bar.progress(i*10, text='Model training in cross validation....')
+      st.session_state['product'] = True
 #   evaluation_result = pd.DataFrame(evaluation_result)
 #   st.dataframe(evaluation_result)
   return [model, evaluation_result]
