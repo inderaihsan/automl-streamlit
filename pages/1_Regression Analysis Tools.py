@@ -42,6 +42,7 @@ def plot_regression_lines(X, y, data):
     plt.tight_layout()
     st.pyplot(fig)
 
+@st.cache_data
 def regression_analysis(X, y, data):
     if data.isna().values.any():
         st.warning("Warning! Detected missing values. or values with infinity! Attempting to remove them...")
@@ -54,7 +55,7 @@ def regression_analysis(X, y, data):
     regression = sm.OLS(data[y], reg_X).fit()
 
     st.subheader("Regression Summary:")
-    st.write(regression.summary(alpha=0.1))
+    st.write(regression.summary2(alpha=0.1))
 
     st.subheader("VIF Data:")
     st.write(vif_data)
@@ -100,20 +101,7 @@ def regression_analysis(X, y, data):
         st.write("Residuals are not normally distributed.")
     else:
         st.write("Residuals are normally distributed.")
-
-    summary_str = regression.summary().as_text()
-    summary_df = pd.DataFrame([x.split() for x in summary_str.splitlines()])
-
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        summary_df.to_excel(writer, index=False, header=False)
-
-    st.download_button(
-        label="Download Regression Summary as Excel",
-        data=output.getvalue(),
-        file_name="regression_summary.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    return regression
 
 st.title('Regression Analysis Tool')
 st.text('A simple linear regression analysis tool.')
@@ -123,6 +111,12 @@ st.text('2. Choose the independent and dependent variables from the left sidebar
 st.text('3. Get the results by clicking the "Start regression analysis" button.')
 
 uploaded = st.file_uploader("Please upload your Excel file", type=['xlsx'])
+
+st.session_state['regression_button'] = None
+
+def buttonclick() : 
+    st.session_state['regression_button'] = True
+    print(st.session_state['regression_button'])
 
 if uploaded is not None:
     dataframe = load_data(uploaded)
@@ -135,6 +129,19 @@ if uploaded is not None:
     st.sidebar.header("Regression Settings")
     independent_vars = st.sidebar.multiselect("Select independent variable(s) (X)", dataframe_model.columns)
     dependent_var = st.sidebar.selectbox("Select dependent variable (Y)", dataframe_model.columns)
-    if st.button("Start regression analysis") and independent_vars and dependent_var:
+    start_button = st.button("Start regression analysis", on_click=buttonclick())
+    if  st.session_state['regression_button'] and independent_vars and dependent_var:
         st.text('If you like this app, kindly click "share" or "star" on my GitHub.')
-        regression_analysis(independent_vars, dependent_var, dataframe)
+        result = regression_analysis(independent_vars, dependent_var, dataframe)
+        summary_str =  result.summary2().tables[1]
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            summary_str.to_excel(writer, sheet_name = 'Regression Summary')
+            dataframe.to_excel(writer, sheet_name='Dataset')
+        st.download_button(
+            label="Download Dataset Summary as Excel",
+            data=output.getvalue(),
+            file_name="regression_result_with_data.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
