@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np 
 import streamlit as st
 import pandas as pd
+import geopandas as gpd 
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from pandas.api.types import (
@@ -13,6 +14,13 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_object_dtype,
 )
+
+def remove_inf(data):
+  data.replace([np.inf, -np.inf], np.nan, inplace=True)
+  data.dropna(inplace=True)
+  return data
+
+from shapely.geometry import Point
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -206,6 +214,42 @@ def evaluate(actual, predicted, squared = False, model = None):
         'RT20' : rt20
     }
     return metrics
+@st.cache_data
+def create_coordinate_2_dots(dataset , cola,colb) :
+     geom = []
+     #dataset.set_index('ID', inplace=True)
+     dataset['ID'] = range(1, len(dataset)+1)
+     dataset.set_index('ID', inplace = True)
+     i=1
+     for j,y in zip(dataset[cola],dataset[colb]) :
+       try :
+         if(pd.notna(j) & pd.notnull(y) & pd.notnull(j)&pd.notna(y)) :
+            j = str(j)
+            j = j.replace('°', ' ')
+            j = j.replace(',', ' ')
+            y = str(y)
+            y = y.replace('°', ' ')
+            y = y.replace(',', ' ')
+            long = float(j)
+            lat = float(y)
+            geom.append(Point(lat, long))
+            i=i+1
+         else :
+            geom.append(Point(-6.211694439526311, 106.82835921068619))
+       except :
+          dataset.drop(i, inplace = True)
+          i=i+1
+     dataset.apply(lambda col: col.drop_duplicates().reset_index(drop=True))
+     gdf_tra = gpd.GeoDataFrame(dataset, geometry = geom)
+     gdf_tra.set_crs(epsg = 4326, inplace = True) 
+     gdf_tra.to_crs(epsg=32749, inplace = True)
+     return gdf_tra
+@st.cache_data
+def transform_data_to_geodataframe(df) :
+  gdf = create_coordinate_2_dots(df, 'latitude', 'longitude')
+  timestamp_columns = gdf.select_dtypes(include=['datetime64']).columns
+  gdf[timestamp_columns] = gdf[timestamp_columns].astype(str)
+  return gdf
 
 @st.cache_resource
 def GovalMachineLearning(data, X, y, _algorithm) :
@@ -279,3 +323,8 @@ def GovalMachineLearning(data, X, y, _algorithm) :
 #   evaluation_result = pd.DataFrame(evaluation_result)
 #   st.dataframe(evaluation_result)
   return [model, evaluation_result]
+
+
+@st.cache_data
+def load_map(map_obj) : 
+    return map_obj.explore()
