@@ -96,7 +96,6 @@ def regression_analysis(X, y, data):
     st.write(f"Test Statistic: {ad_test.statistic}")
     for critical_value, significance_level in zip(ad_test.critical_values, ad_test.significance_level):
         st.write(f"Critical Value at {significance_level}% significance level: {critical_value}")
-
     if ad_test.statistic > ad_test.critical_values[2]:  # 5% significance level
         st.write("Residuals are not normally distributed.")
     else:
