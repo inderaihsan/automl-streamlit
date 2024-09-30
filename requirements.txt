@@ -12,3 +12,5 @@ xlsxwriter
 geopandas
 mapclassify
 folium
+streamlit
+streamlit-folium
