@@ -9,3 +9,6 @@ statsmodels
 streamlit
 openpyxl
 xlsxwriter
+geopandas
+mapclassify
+folium
