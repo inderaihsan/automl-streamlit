@@ -17,7 +17,7 @@ from pandas.api.types import (
 
 def remove_inf(data):
   data.replace([np.inf, -np.inf], np.nan, inplace=True)
-  data.dropna(inplace=True)
+  data.dropna(inplace=True, subset = 'geometry')
   return data
 
 from shapely.geometry import Point

@@ -45,11 +45,11 @@ st.markdown("""Welcome to the Geopandas Distance Calculation Interface, a user-f
 # col1, col2 = st.columns(2)
 # with col1 : 
 #     example_data2_geo = transform_data_to_geodataframe(example_data2) 
-#     st_folium(example_data2_geo.explore(style_kwds = dict(radius = 10)), width = 300, height = 300)
+#     st_folium(example_data2_geo.explore(style_kwds = dict(radius = 10)), width = 450, height = 450)
 #     # st.text("map of The national monument of Indonesia")
 # with col2 : 
 #     example_data_geo = transform_data_to_geodataframe(example_data) 
-#     st_folium(example_data_geo.explore(style_kwds = dict(radius = 10)), width = 300, height = 300)
+#     st_folium(example_data_geo.explore(style_kwds = dict(radius = 10)), width = 450, height = 450)
 #     # st.text("map of Indonesian stock exchange")
 # output = io.BytesIO()
 # with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -86,7 +86,7 @@ with col4:
                 if show_map_from:
                     preview_map_from = df_from.sample(frac=0.1, random_state=42)
                     with st.form(key="smth"):
-                        st_folium(preview_map_from.explore(), height=300, width=300)
+                        st_folium(preview_map_from.explore(), height=450, width=450)
                         st.form_submit_button("Map preview")
             except:
                 st.error("There's no longitude or latitude column in the data")
@@ -105,7 +105,7 @@ with col4:
                 # Checkbox to preview the map
                 show_map_from = st.checkbox("View map preview:", key='show_map_from_checkbox')
                 if show_map_from:
-                    st_folium(transform_data_to_geodataframe(df_from).explore(), height=300, width=300)
+                    st_folium(transform_data_to_geodataframe(df_from).explore(), height=450, width=450)
             except:
                 st.error("Please provide a correct geometry value")
 
@@ -129,7 +129,7 @@ with col5:
                 show_map_to = st.checkbox("View map preview:", key='show_map_to')
                 if show_map_to:
                     with st.form(key="smth2"):
-                        st_folium(df_to.explore(), height=300, width=300)
+                        st_folium(df_to.explore(), height=450, width=450)
                         st.form_submit_button("Map preview")
             # except:
                 # st.error("There's no longitude or latitude column in the data")
@@ -149,11 +149,31 @@ with col5:
                 show_map_to = st.checkbox("View map preview:", key='show_map_to_checkbox')
                 if show_map_to:
                     with st.form(key="smth2"):
-                        st_folium(df_to.explore(), height=300, width=300)
+                        st_folium(df_to.explore(), height=450, width=450)
                         st.form_submit_button("Map preview")
             except:
                 st.error("Please provide a correct geometry value")
-st.write(isinstance(df_from, gpd.GeoDataFrame))
-st.write(isinstance(df_to, gpd.GeoDataFrame))
+
+def calculate_distance(df1, df2, distance_col) : 
+    if("index_left" in df1) : 
+        df1.drop("index_left", axis = 1, inplace = True)
+    if("index_right" in df1) : 
+        df1.drop("index_right", axis = 1, inplace = True)
+    if("index_right" in df2) : 
+        df2.drop("index_right", axis = 1, inplace = True)  
+    if("index_left" in df2) : 
+        df2.drop("index_left", axis = 1, inplace = True)
+    return gpd.sjoin_nearest(df1,df2, how = 'left', distance_col = distance_col)
+
 if(isinstance(df_from, gpd.GeoDataFrame) and isinstance(df_to, gpd.GeoDataFrame)) : 
-    st.write("Print ready to calculate")
+    st.subheader("Print ready to calculate")
+    column_name = st.text_input("what will be the name of the column?")
+    button_click = st.button("Calculate distance from left data to right data", )  
+    if(button_click and column_name) : 
+        calculated_object = calculate_distance(df_from, df_to, column_name) 
+        calculated_object = remove_inf(calculated_object)
+        st_folium(calculated_object.explore(column = column_name))
+        st.dataframe(calculated_object.drop("geometry", axis = 1))
+        
+    
+  
