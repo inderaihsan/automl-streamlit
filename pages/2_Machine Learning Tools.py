@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 import streamlit as st 
 import joblib
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 from helper import GovalMachineLearning, filter_dataframe, transform_dataframe
 
@@ -30,7 +31,6 @@ def upload_data() :
     return uploaded 
 def click_predict() : 
     st.session_state['predict_button'] = True
-    print(st.session_state['predict_button'])
 
 st.session_state['predict_button'] = False
 
@@ -49,29 +49,46 @@ if (uploaded) :
     st.subheader("Step 4 select dependent and independent variable") 
     y = st.selectbox("dependent variable : ", df.columns) 
     x = st.multiselect("independent variable : ", [x for x in df.columns if x!=y])
+    st.subheader("Model Random Forest Hyperparameters")
+    bootstrap = st.radio("Bootstrap (True/False):", (True, False))
+    max_features = st.radio("Max Features:", ('sqrt', 'log2'))
+    max_depth = st.slider("Max Depth:", min_value=5, max_value=50, value=10)
+    n_estimators = st.slider("Number of Estimators:", min_value=10, max_value=100, value=50)
     predict_button = st.button("start training", on_click=click_predict())
-    if (st.session_state['predict_button'] == True) :  
-        try : 
-            product = GovalMachineLearning(df,x,y,RandomForestRegressor()) 
-            mlmodel = product[0]
-            kfoldresult = product[1]
-            joblib_filename = "Machinelearningmodel{}.sav".format(datetime.now().strftime("%Y%m%d_%H%M%S"))
-            model_buffer = io.BytesIO()
-            joblib.dump(mlmodel, model_buffer)
-            model_buffer.seek(0)          
-            col1, col2 = st.columns(2)
-            with col1:
-                    st.write("KFOLD evaluation:")
-                    st.dataframe(kfoldresult)
-            with col2: 
-                st.download_button(
-                    label="Download trained model",
-                    data=model_buffer,
-                    file_name=joblib_filename,
-                    mime='application/octet-stream'
-                )
-        except : 
-            st.warning("model ready to prepare")
+    if (predict_button) :  
+        product = GovalMachineLearning(df,x,y,RandomForestRegressor(max_features=max_features , max_depth = max_depth, n_estimators = n_estimators, bootstrap = bootstrap, random_state = 42)) 
+        mlmodel = product[0]
+        
+        kfoldresult = product[1]
+        joblib_filename = "Machinelearningmodel{}.sav".format(datetime.now().strftime("%Y%m%d_%H%M%S"))
+        model_buffer = io.BytesIO()
+        joblib.dump(mlmodel, model_buffer)
+        model_buffer.seek(0)          
+        st.write("Try!!:")
+        featimp = mlmodel.feature_importances_
+        featname = mlmodel.feature_names_in_
+        feature_importance_df = pd.DataFrame({'Feature': featname, 'Importance': featimp})
+
+        # Sort the DataFrame by feature importance in descending order
+        st.subheader("Feature importance")
+        feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False)
+
+        # Create a bar plot to visualize feature importances
+        plt.figure(figsize=(8, 5))
+        plt.barh(feature_importance_df['Feature'], feature_importance_df['Importance'], color='skyblue')
+        plt.xlabel('Importance')
+        plt.ylabel('Feature')
+        plt.title('Feature Importances')
+        plt.tight_layout()  
+        st.pyplot(plt)  
+        plt.clf()  
+        st.download_button(
+            label="Download trained model",
+            data=model_buffer,
+            file_name=joblib_filename,
+            mime='application/octet-stream'
+        )
+
         
         
 
