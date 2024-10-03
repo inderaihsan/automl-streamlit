@@ -251,7 +251,7 @@ def transform_data_to_geodataframe(df) :
   gdf[timestamp_columns] = gdf[timestamp_columns].astype(str)
   return gdf
 
-@st.cache_resource
+
 def GovalMachineLearning(data, X, y, _algorithm) :
   algorithm = _algorithm
   columns = X
@@ -276,23 +276,13 @@ def GovalMachineLearning(data, X, y, _algorithm) :
     x="prediction",
     y=y_name,
     )
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     mod = algorithm.fit(X_train, y_train)
     prediction_test = mod.predict(X_test)
     test_score = evaluate(y_test, prediction_test, squared = True) 
     train_score = evaluate(y, prediction_train, squared = True) 
     st.session_state['test_score'] = test_score
     st.session_state['train_score'] = train_score
-    col1, col2 = st.columns(2)
-
-# Display tables in the respective columns
-    with col1:
-        st.write("Train score:")
-        st.dataframe(pd.DataFrame(train_score, index = [0]).transpose())
-
-    with col2:
-        st.write("Test score (30%):")
-        st.dataframe(pd.DataFrame(test_score, index = [0]).transpose())
     i=0
     evaluation_result = {
         'R2' : [],
@@ -319,7 +309,20 @@ def GovalMachineLearning(data, X, y, _algorithm) :
     #   st.write("training in KFOLD.... fold", i+1)
       i = i+1
       loading_bar.progress(i*10, text='Model training in cross validation....')
-      st.session_state['product'] = True
+      st.session_state['product'] = True 
+    col1, col2, col3 = st.columns(3)
+
+# Display tables in the respective columns
+    with col1:
+        st.write("Train score:")
+        st.dataframe(pd.DataFrame(train_score, index = [0]).transpose())
+
+    with col2:
+        st.write("Test score (30%):")
+        st.dataframe(pd.DataFrame(test_score, index = [0]).transpose())
+    with col3 : 
+        st.write("KFOLD evaluation:")
+        st.dataframe(pd.DataFrame(evaluation_result))
 #   evaluation_result = pd.DataFrame(evaluation_result)
 #   st.dataframe(evaluation_result)
   return [model, evaluation_result]
