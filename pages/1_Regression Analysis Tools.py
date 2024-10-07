@@ -129,7 +129,7 @@ if uploaded is not None:
     independent_vars = st.sidebar.multiselect("Select independent variable(s) (X)", dataframe_model.columns)
     dependent_var = st.sidebar.selectbox("Select dependent variable (Y)", dataframe_model.columns)
     start_button = st.button("Start regression analysis", on_click=buttonclick())
-    if  (st.session_state['regression_button']==True and independent_vars and dependent_var):
+    if  (start_button and independent_vars and dependent_var):
         st.text('If you like this app, kindly click "share" or "star" on my GitHub.')
         result = regression_analysis(independent_vars, dependent_var, dataframe)
         summary_str =  result.summary2().tables[1]
