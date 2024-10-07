@@ -90,7 +90,7 @@ def regression_analysis(X, y, data):
     st.pyplot(plt.gcf())
     plt.clf()
 
-    plot_regression_lines(X, y, data)
+    # plot_regression_lines(X, y, data) removed due to processing issue!!
 
     st.write("Anderson-Darling Test:")
     st.write(f"Test Statistic: {ad_test.statistic}")
