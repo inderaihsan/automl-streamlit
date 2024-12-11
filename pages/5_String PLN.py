@@ -209,6 +209,9 @@ if uploaded:
         b__['Nama Saluran_df1'] = b__['Nama Saluran_df2']
         b__['Y_df1'] = b__['Y_df2']
         b__['X_df1'] = b__['X_df2']
+        b__['Nama Tower_df1'] = b__['Nama Tower_df2']
+        b__['UPT_df1'] = b__['UPT_df2']
+        b__['X_df1'] = b__['X_df2']
         b__['JarakTower (m)_df1'] = b__['JarakTower (m)_df2']
         for col in b__.columns:
             if '_df1' in col:
