@@ -15,7 +15,7 @@ This app is designed to help users efficiently clean and match data between two 
 # Common words to remove
 common_words = ['TANAH', 'SUTT', '150', 'KV', 'TANAH;SUTT', '150kV', 'TOWER', "500kV", "Kv", "kV", "150", "500", "Tower-p",
                 '150KV', 'TANAH;SUTET', '500KV', 'TANAH;TOWER;SUTT', 'TANAH;TOWER', "SUTET", "Tanah", "Tapak", "Tower"
-                'TJ', 'TAPAK', 'TANAH;', 'nan', '500 kV', 'SUTET', 'Sutet', 'sutet', 'SUTT', 'sutt', 'Sutt', 'T.', ';', '#', "+CMGSII", "Tower-"]
+                'TJ', 'TAPAK', 'TANAH;', 'nan', '500 kV', 'SUTET', 'Sutet', 'sutet','sutt', 'SUTT', 'sutt', 'Sutt', 'T.', ';', '#', "+CMGSII", "Tower-"]
 
 # Function to remove common words
 
