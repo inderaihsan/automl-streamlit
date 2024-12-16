@@ -21,7 +21,7 @@ This application allows you to upload geospatial data in Excel format and genera
 - Distance to roads
 - Distance to airports
 - Distance to industrial zones
-- Proximity to major landmarks such as Tigaraksa, Bogor-Depok, and Tangerang satellites
+- Proximity to major city in Jawa Timur
 
 Simply upload your file containing longitude and latitude columns, press the 'Process Data' button, and download the processed file with the newly generated features.
 """)
@@ -41,7 +41,7 @@ if st.session_state["uploaded_file"] is not None:
     if st.button("Process Data"):
         # Send file to the Django server
         response = requests.post(
-            local_url + '/feat_gen/gen_feat_jakarta/',
+            server_url + '/feat_gen/gen_feat_jawa_timur/',
             files={'file': st.session_state["uploaded_file"]},
             verify=False
         )
