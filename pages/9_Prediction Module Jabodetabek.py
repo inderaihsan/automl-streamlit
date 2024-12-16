@@ -33,7 +33,7 @@ if st.session_state["uploaded_file"] is not None:
     if st.button("Process Data"):
         # Send file to the Django server
         response = requests.post(
-            local_url + '/feat_gen/predict_jabodetabek/',
+            server_url + '/feat_gen/predict_jabodetabek/',
             files={'file': st.session_state["uploaded_file"]},
             verify=False
         )
