@@ -6,7 +6,12 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 import streamlit as st
 import io
+from rapidfuzz import fuzz
+import time
 
+
+def edit_similarity_fuzzy(str1, str2):
+    return fuzz.ratio(str1, str2) / 100.0  # Normalize to [0, 1]
 
 
 st.header("""About the App
@@ -115,7 +120,7 @@ def edit_similarity(str1, str2):
     """Calculates the edit similarity (normalized Levenshtein distance)."""
     return SequenceMatcher(None, str1, str2).ratio()
 
-def match_combined_columns(df1, df2, n_range=range(1, 2)):
+def match_combined_columns(df1, df2, n_range=1):
     """
     Matches rows between two DataFrames based on the 'combined' column using a combination of
     Jaccard similarity and edit similarity over a range of n-gram values to find the maximum similarity.
@@ -146,21 +151,27 @@ def match_combined_columns(df1, df2, n_range=range(1, 2)):
 
         # Compare with each 'combined' in df2
         for combined2 in df2['combined']:
-            for n in n_range:
-                # Calculate Jaccard similarity
-                jaccard_sim = jaccard_similarity_char_level(combined1, combined2, n=n)
+           
+            # Calculate Jaccard similarity
+            jaccard_sim = jaccard_similarity_char_level(combined1, combined2, n=1)
 
-                # Calculate edit similarity
-                edit_sim = edit_similarity(combined1, combined2)
+            # Calculate edit similarity
+            edit_sim = edit_similarity_fuzzy(combined1, combined2)
 
-                # Combine similarities (weighted average can be adjusted as needed)
-                combined_similarity = 0.5 * jaccard_sim + 0.5 * edit_sim
+            # Combine similarities (weighted average can be adjusted as needed)
+            combined_similarity = 0.5 * jaccard_sim + 0.5 * edit_sim
+            combined_similarity =  jaccard_sim 
 
-                # Update best match if similarity is higher
-                if combined_similarity > best_similarity:
-                    best_similarity = combined_similarity
-                    best_match = combined2
-                    best_n = n
+            # Update best match if similarity is higher
+            if combined_similarity > best_similarity:
+                best_similarity = combined_similarity
+                best_match = combined2
+            
+            # if(combined_similarity > 0.65) : 
+            #     break
+            
+            
+                
 
         # Append the best match, similarity score, and n value
         best_matches.append(best_match)
@@ -184,19 +195,19 @@ def match_combined_columns(df1, df2, n_range=range(1, 2)):
     return matched_df
 @st.cache_data
 def load_pln_data(data) : 
-    objek_penilaian = pd.read_excel(data, sheet_name = 'ObjekPenilaianTT')
-    matchtofa = pd.read_excel(data, sheet_name = 'MatchToFA')
+    objek_penilaian = pd.read_excel(data, sheet_name = 'Objek Penilaian TT')
+    matchtofa = pd.read_excel(data, sheet_name = 'Match to Fa')
     objek_penilaian['clean_name'] = objek_penilaian['Nama Aset 1'].apply(remove_common_words)
     objek_penilaian['clean_name'] = objek_penilaian['clean_name'].apply(remove_words_with_special_chars)
     objek_penilaian['clean_name'] = objek_penilaian['clean_name'].apply(remove_special_characters)
     objek_penilaian['clean_name'] = objek_penilaian['clean_name'].apply(remove_floating_words)
     objek_penilaian['number_extracted'] = objek_penilaian['Nama Aset 1'].apply(extract_numbers)
     objek_penilaian['combined'] = objek_penilaian['clean_name'] +' '+ objek_penilaian['number_extracted']
-    matchtofa['clean_name'] = matchtofa['Nama Tower'].apply(remove_common_words)
+    matchtofa['clean_name'] = matchtofa['NAMA TOWER'].apply(remove_common_words)
     matchtofa['clean_name'] = matchtofa['clean_name'].apply(remove_words_with_special_chars)
     matchtofa['clean_name'] = matchtofa['clean_name'].apply(remove_special_characters)
     matchtofa['clean_name'] = matchtofa['clean_name'].apply(remove_floating_words)
-    matchtofa['number_extracted'] = matchtofa['Nama Tower'].apply(extract_numbers)
+    matchtofa['number_extracted'] = matchtofa['NAMA TOWER'].apply(extract_numbers)
     matchtofa['combined'] = matchtofa['clean_name'] +' ' + matchtofa['number_extracted'] 
     return objek_penilaian , matchtofa
 
@@ -204,21 +215,25 @@ uploaded = st.file_uploader("Please upload your Excel file", type=['xlsx'])
 if uploaded:
     if "processed_data" not in st.session_state:
         # Load and process data if not already cached in session state
+
+        start_time = time.time()  #
         objek_penilaian, matchtofa = load_pln_data(uploaded)
         b__ = match_combined_columns(objek_penilaian, matchtofa)
-        b__['Nama Saluran_df1'] = b__['Nama Saluran_df2']
+        b__['Nama Saluran'] = b__['NAMA SALURAN']
         b__['Y_df1'] = b__['Y_df2']
         b__['X_df1'] = b__['X_df2']
-        b__['Nama Tower_df1'] = b__['Nama Tower_df2']
+        b__['Nama Tower'] = b__['NAMA TOWER']
         b__['UPT_df1'] = b__['UPT_df2']
-        b__['X_df1'] = b__['X_df2']
-        b__['JarakTower (m)_df1'] = b__['JarakTower (m)_df2']
+        b__['JarakTower (m)'] = b__['DISTANCE']
         for col in b__.columns:
             if '_df1' in col:
                 b__.rename(columns={col: col.replace("_df1", " ")}, inplace=True)
             if '_df2' in col:
                 b__.drop(col, axis=1, inplace=True)
-        st.session_state["processed_data"] = b__
+        st.session_state["processed_data"] = b__ 
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        st.write(f"Total script execution time: {elapsed_time:.2f} seconds.")
     else:
         # Retrieve cached data from session state
         b__ = st.session_state["processed_data"]
@@ -226,7 +241,8 @@ if uploaded:
     if not b__.empty:
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            b__.to_excel(writer, index=False, sheet_name='Sheet1')
+            b__.to_excel(writer, index=False, sheet_name='Sheet1') 
+            matchtofa.to_excel(writer, index = False, sheet_name='Match to Fa')
             writer.close()
             buffer.seek(0)
 
@@ -234,9 +250,11 @@ if uploaded:
         st.download_button(
             label="Download Calculation result here!",
             data=buffer,
-            file_name="regression_result_with_data.xlsx",
+            file_name="Processed_Algorithm.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+    
     
 
 
