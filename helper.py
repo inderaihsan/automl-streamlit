@@ -331,3 +331,12 @@ def GovalMachineLearning(data, X, y, _algorithm) :
 @st.cache_data
 def load_map(map_obj) : 
     return map_obj.explore()
+
+
+def get_local_url() : 
+    local_url = "http://192.168.90.148:8000/" 
+    return local_url
+
+def get_server_url() : 
+    server_url = "http://47.129.216.241/" 
+    return server_url

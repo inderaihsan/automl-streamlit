@@ -195,19 +195,23 @@ def match_combined_columns(df1, df2, n_range=1):
     return matched_df
 @st.cache_data
 def load_pln_data(data) : 
-    objek_penilaian = pd.read_excel(data, sheet_name = 'Objek Penilaian TT')
-    matchtofa = pd.read_excel(data, sheet_name = 'Match to Fa')
-    objek_penilaian['clean_name'] = objek_penilaian['Nama Aset 1'].apply(remove_common_words)
-    objek_penilaian['clean_name'] = objek_penilaian['clean_name'].apply(remove_words_with_special_chars)
-    objek_penilaian['clean_name'] = objek_penilaian['clean_name'].apply(remove_special_characters)
-    objek_penilaian['clean_name'] = objek_penilaian['clean_name'].apply(remove_floating_words)
-    objek_penilaian['number_extracted'] = objek_penilaian['Nama Aset 1'].apply(extract_numbers)
+    objek_penilaian = pd.read_excel(data, sheet_name = 0)
+    matchtofa = pd.read_excel(data, sheet_name = 1)
+    for items in objek_penilaian.columns : 
+        objek_penilaian.rename(columns = {items : items.lower()}, inplace = True) 
+    for items in matchtofa.columns : 
+        matchtofa.rename(columns = {items : items.lower()}, inplace = True)
+    objek_penilaian['clean_name'] = objek_penilaian['nama aset 1'].astype(str).apply(remove_common_words)
+    objek_penilaian['clean_name'] = objek_penilaian['clean_name'].astype(str).apply(remove_words_with_special_chars)
+    objek_penilaian['clean_name'] = objek_penilaian['clean_name'].astype(str).apply(remove_special_characters)
+    objek_penilaian['clean_name'] = objek_penilaian['clean_name'].astype(str).apply(remove_floating_words)
+    objek_penilaian['number_extracted'] = objek_penilaian['nama aset 1'].astype(str).apply(extract_numbers)
     objek_penilaian['combined'] = objek_penilaian['clean_name'] +' '+ objek_penilaian['number_extracted']
-    matchtofa['clean_name'] = matchtofa['NAMA TOWER'].apply(remove_common_words)
-    matchtofa['clean_name'] = matchtofa['clean_name'].apply(remove_words_with_special_chars)
-    matchtofa['clean_name'] = matchtofa['clean_name'].apply(remove_special_characters)
-    matchtofa['clean_name'] = matchtofa['clean_name'].apply(remove_floating_words)
-    matchtofa['number_extracted'] = matchtofa['NAMA TOWER'].apply(extract_numbers)
+    matchtofa['clean_name'] = matchtofa['nama tower'].astype(str).apply(remove_common_words)
+    matchtofa['clean_name'] = matchtofa['clean_name'].astype(str).apply(remove_words_with_special_chars)
+    matchtofa['clean_name'] = matchtofa['clean_name'].astype(str).apply(remove_special_characters)
+    matchtofa['clean_name'] = matchtofa['clean_name'].astype(str).apply(remove_floating_words)
+    matchtofa['number_extracted'] = matchtofa['nama tower'].astype(str).apply(extract_numbers)
     matchtofa['combined'] = matchtofa['clean_name'] +' ' + matchtofa['number_extracted'] 
     return objek_penilaian , matchtofa
 
@@ -219,12 +223,12 @@ if uploaded:
         start_time = time.time()  #
         objek_penilaian, matchtofa = load_pln_data(uploaded)
         b__ = match_combined_columns(objek_penilaian, matchtofa)
-        b__['Nama Saluran'] = b__['NAMA SALURAN']
-        b__['Y_df1'] = b__['Y_df2']
-        b__['X_df1'] = b__['X_df2']
-        b__['Nama Tower'] = b__['NAMA TOWER']
-        b__['UPT_df1'] = b__['UPT_df2']
-        b__['JarakTower (m)'] = b__['DISTANCE']
+        b__['nama saluran'] = b__['nama saluran_df2']
+        b__['y_df1'] = b__['y_df2']
+        b__['x_df1'] = b__['x_df2']
+        b__['nama tower'] = b__['nama tower_df2']
+        b__['upt_df1'] = b__['upt_df2']
+        # b__['jaraktower (m)'] = b__['jaraktower']
         for col in b__.columns:
             if '_df1' in col:
                 b__.rename(columns={col: col.replace("_df1", " ")}, inplace=True)
@@ -241,7 +245,7 @@ if uploaded:
     if not b__.empty:
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            b__.to_excel(writer, index=False, sheet_name='Sheet1') 
+            b__.to_excel(writer, index=False, sheet_name='Generated_objek_penilaian') 
             matchtofa.to_excel(writer, index = False, sheet_name='Match to Fa')
             writer.close()
             buffer.seek(0)
