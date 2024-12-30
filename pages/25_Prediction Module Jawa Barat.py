@@ -3,8 +3,6 @@ import streamlit as st
 from datetime import datetime
 
 
-# Streamlit file uploader
-
 from helper import get_local_url, get_server_url
 # Streamlit file uploader
 local_url = get_local_url()
@@ -14,19 +12,11 @@ server_url = get_server_url()
 
 
 st.write("""
-This application allows you to upload geospatial data in Excel format and generate enriched features based on proximity to various points of interest in Jakarta, including:
+This application allows you to upload geospatial data in Excel format and generate prediction using Machine Learning Model of Jawa Timur Region
 
-- Distance to bus stops
-- Distance to universities
-- Distance to malls
-- Distance to toll gates
-- Distance to schools
-- Distance to roads
-- Distance to airports
-- Distance to industrial zones
-- Proximity to major city in Banten
+Simply upload your file (Make sure all feature exist in the file), press the 'Process Data' button, and download the processed file with Prediction.
 
-Simply upload your file containing longitude and latitude columns, press the 'Process Data' button, and download the processed file with the newly generated features.
+the process might take up several minutes depending on the complexity of the model and the number of data
 """)
 if "uploaded_file" not in st.session_state:
     st.session_state["uploaded_file"] = None
@@ -44,18 +34,18 @@ if st.session_state["uploaded_file"] is not None:
     if st.button("Process Data"):
         # Send file to the Django server
         response = requests.post(
-            server_url + '/feat_gen/gen_feat_banten/',
+            server_url + '/feat_gen/predict/jawa_barat/',
             files={'file': st.session_state["uploaded_file"]},
             verify=False
         )
 
         # Handle the response
         if response.status_code == 200:
-            st.success("Feature Generated!")
+            st.success("Sucessfuly predict the file! check (prediction column)!")
 
             # Generate a timestamp for the file name
             original_file_name = uploaded_file.name.rsplit('.', 1)[0]  # Remove extension
-            file_name = f"{original_file_name}_generated_banten.xlsx"
+            file_name = f"{original_file_name}_predicted.xlsx"
 
             # Provide download button for the processed file
             st.download_button(
@@ -65,4 +55,11 @@ if st.session_state["uploaded_file"] is not None:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
         else:
-            st.error("Error: Something went wrong! Please ensure the file contains longitude and latitude in the columns.")
+            try : 
+                error_message = response.json().get('Message', 'An error occurred')
+                feat__ = response.json().get('feat__', 'An error occurred')
+                st.error(error_message)
+                st.error(feat__)
+            except : 
+                st.error("Snap!, file is too large to handle!")
+            # st.error(response.data['feat__'])

@@ -15,6 +15,8 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
+
+
 def remove_inf(data):
   data.replace([np.inf, -np.inf], np.nan, inplace=True)
   data.dropna(inplace=True, subset = 'geometry')
@@ -337,6 +339,14 @@ def get_local_url() :
     local_url = "http://192.168.90.148:8000/" 
     return local_url
 
-def get_server_url() : 
+
+condition ='SERVER'
+def get_server_url(condition='LOCAL') : 
     server_url = "http://47.129.216.241/" 
-    return server_url
+    if condition=='SERVER' :
+        return server_url 
+    else :
+        return "http://192.168.90.148:8000/" 
+
+
+    

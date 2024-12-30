@@ -12,7 +12,7 @@ server_url = get_server_url()
 
 
 st.write("""
-This application allows you to upload geospatial data in Excel format and generate prediction using Machine Learning Model of kalimantan Region
+This application allows you to upload geospatial data in Excel format and generate prediction using Machine Learning Model of Banten Region
 
 Simply upload your file (Make sure all feature exist in the file), press the 'Process Data' button, and download the processed file with Prediction.
 

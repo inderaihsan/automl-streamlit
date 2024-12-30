@@ -3,8 +3,6 @@ import streamlit as st
 from datetime import datetime
 
 
-# Streamlit file uploader
-
 from helper import get_local_url, get_server_url
 # Streamlit file uploader
 local_url = get_local_url()
@@ -24,8 +22,8 @@ This application allows you to upload geospatial data in Excel format and genera
 - Distance to roads
 - Distance to airports
 - Distance to industrial zones
-- Proximity to major city in Banten
-
+- Proximity to major city in Jawa Tengah (Including Yogyakarta)
+ 
 Simply upload your file containing longitude and latitude columns, press the 'Process Data' button, and download the processed file with the newly generated features.
 """)
 if "uploaded_file" not in st.session_state:
@@ -44,7 +42,7 @@ if st.session_state["uploaded_file"] is not None:
     if st.button("Process Data"):
         # Send file to the Django server
         response = requests.post(
-            server_url + '/feat_gen/gen_feat_banten/',
+            server_url + '/feat_gen/gen_feat_bali/',
             files={'file': st.session_state["uploaded_file"]},
             verify=False
         )
@@ -55,7 +53,7 @@ if st.session_state["uploaded_file"] is not None:
 
             # Generate a timestamp for the file name
             original_file_name = uploaded_file.name.rsplit('.', 1)[0]  # Remove extension
-            file_name = f"{original_file_name}_generated_banten.xlsx"
+            file_name = f"{original_file_name}_generated_feature_bali.xlsx"
 
             # Provide download button for the processed file
             st.download_button(

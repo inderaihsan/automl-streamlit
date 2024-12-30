@@ -22,8 +22,8 @@ This application allows you to upload geospatial data in Excel format and genera
 - Distance to roads
 - Distance to airports
 - Distance to industrial zones
-- Proximity to major city in Jawa Tengah (Including Yogyakarta)
-
+- Proximity to major city in Jawa Timur
+ 
 Simply upload your file containing longitude and latitude columns, press the 'Process Data' button, and download the processed file with the newly generated features.
 """)
 if "uploaded_file" not in st.session_state:
