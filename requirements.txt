@@ -13,4 +13,5 @@ geopandas
 mapclassify
 folium
 streamlit-folium
+rapidfuzz
 
