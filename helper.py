@@ -346,7 +346,9 @@ def get_server_url(condition='SERVER') :
     if condition=='SERVER' :
         return server_url 
     else :
-        return "http://192.168.90.148:8000/" 
+        # return "http://192.168.90.148:8000/" 
+        # return "http://192.168.1.155:8000/" 
+        return "http://127.0.0.1:8000/" 
 
 
     
