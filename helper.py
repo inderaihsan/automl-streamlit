@@ -246,12 +246,63 @@ def create_coordinate_2_dots(dataset , cola,colb) :
      gdf_tra.set_crs(epsg = 4326, inplace = True) 
      gdf_tra.to_crs(epsg=32749, inplace = True)
      return gdf_tra
+
 @st.cache_data
-def transform_data_to_geodataframe(df) :
-  gdf = create_coordinate_2_dots(df, 'latitude', 'longitude')
-  timestamp_columns = gdf.select_dtypes(include=['datetime64']).columns
-  gdf[timestamp_columns] = gdf[timestamp_columns].astype(str)
-  return gdf
+def transform_data_to_geodataframe(df, lat_col='Y', lon_col='X'):
+    # Create a copy to avoid modifying the original dataframe
+    dataset = df.copy()
+
+    # Add an ID column if not present
+    if 'ID' not in dataset.columns:
+        dataset['ID'] = range(1, len(dataset) + 1)
+
+    dataset.set_index('ID', inplace=True)
+
+    def create_point(row):
+        try:
+            lat, lon = row[lat_col], row[lon_col]
+            if pd.notna(lat) and pd.notna(lon):
+                # Clean and convert coordinates
+                lat = float(str(lat).replace('°', '').replace(',', '.'))
+                lon = float(str(lon).replace('°', '').replace(',', '.'))
+                return Point(lon, lat)
+        except ValueError:
+            pass
+        # Default point if conversion fails
+        return Point(-6.211694439526311, 106.82835921068619)
+
+    # Create geometry column
+    dataset['geometry'] = dataset.apply(create_point, axis=1)
+
+    # Remove rows with default geometry
+    dataset = dataset[dataset['geometry'] != Point(-6.211694439526311, 106.82835921068619)]
+
+    # Convert to GeoDataFrame
+    gdf = gpd.GeoDataFrame(dataset, geometry='geometry')
+
+    # Set CRS and convert
+    gdf.set_crs(epsg=4326, inplace=True, allow_override=True)
+    gdf.to_crs(epsg=32749, inplace=True)
+
+    # Convert datetime columns to string
+    timestamp_columns = gdf.select_dtypes(include=['datetime64']).columns
+    gdf[timestamp_columns] = gdf[timestamp_columns].astype(str)
+
+    return gdf
+
+def clean_invalid_infinite_geometries(gdf):
+    gdf_valid = gdf[gdf.is_valid]
+    def has_infinite_or_nan(geometry):
+        try:
+            if geometry.is_empty:
+                return True
+            coords = np.array(geometry.coords)
+            return np.any(np.isnan(coords)) or np.any(np.isinf(coords))
+        except:
+            return True 
+    gdf_clean = gdf_valid[~gdf_valid.geometry.apply(has_infinite_or_nan)]
+
+    return gdf_clean
 
 
 def GovalMachineLearning(data, X, y, _algorithm) :
@@ -308,13 +359,10 @@ def GovalMachineLearning(data, X, y, _algorithm) :
       evaluation_result['FSD'].append(fold_result['FSD'])
       evaluation_result['PE10'].append(fold_result['PE10'])
       evaluation_result['RT20'].append(fold_result['RT20'])
-    #   st.write("training in KFOLD.... fold", i+1)
       i = i+1
       loading_bar.progress(i*10, text='Model training in cross validation....')
       st.session_state['product'] = True 
     col1, col2, col3 = st.columns(3)
-
-# Display tables in the respective columns
     with col1:
         st.write("Train score:")
         st.dataframe(pd.DataFrame(train_score, index = [0]).transpose())
@@ -325,8 +373,6 @@ def GovalMachineLearning(data, X, y, _algorithm) :
     with col3 : 
         st.write("KFOLD evaluation:")
         st.dataframe(pd.DataFrame(evaluation_result))
-#   evaluation_result = pd.DataFrame(evaluation_result)
-#   st.dataframe(evaluation_result)
   return [model, evaluation_result]
 
 
@@ -351,4 +397,3 @@ def get_server_url(condition='SERVER') :
         return "http://127.0.0.1:8000/" 
 
 
-    
