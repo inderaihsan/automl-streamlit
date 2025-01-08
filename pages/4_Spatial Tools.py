@@ -6,7 +6,8 @@ import io
 import zipfile        
 import os        
 import tempfile      
-from helper import transform_data_to_geodataframe, clean_invalid_infinite_geometries      
+# from helper import transform_data_to_geodataframe, clean_invalid_infinite_geometries       
+from helper import *
 from streamlit_folium import st_folium        
 import folium        
   
