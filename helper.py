@@ -387,7 +387,7 @@ def get_local_url() :
 
 
 condition ='SERVER'
-def get_server_url(condition='SERVER') : 
+def get_server_url(condition='LOCAL') : 
     server_url = "http://47.129.216.241/" 
     if condition=='SERVER' :
         return server_url 
